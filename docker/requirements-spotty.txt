@@ -1,0 +1,9 @@
+neptune-client
+ml_collections
+pandas==1.4.4
+tqdm==4.65.0
+torch
+torchvision
+opencv-python==4.6.0.66
+Pillow==8.4.0
+scikit-learn==1.2.2

@@ -1,0 +1,41 @@
+project:
+  name: product-matching
+  syncFilters:
+    - exclude:
+        - .idea/*
+        - .git/*
+        - '*/__pycache__/*'
+        - .ipynb_checkpoints/*
+        - venv/*
+
+containers:
+  - projectDir: /workspace/project
+    file: docker/Dockerfile.spotty
+    volumeMounts:
+      - name: workspace
+        mountPath: /workspace
+
+
+instances:
+  - name: VIT-finetune
+    provider: aws
+    parameters:
+      region: us-east-1
+      instanceType: g4dn.xlarge
+      dockerDataRoot: /docker
+      volumes:
+        - name: workspace
+          parameters:
+            size: 60
+            deletionPolicy: retain
+        - name: docker
+          parameters:
+            size: 25
+            mountDir: /docker
+            deletionPolicy: retain
+
+scripts:
+  preprocess: |
+    python preprocessing.py
+  train: |
+    python main.py
