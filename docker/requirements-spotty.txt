@@ -7,3 +7,7 @@ torchvision
 opencv-python==4.6.0.66
 Pillow==8.4.0
 scikit-learn==1.2.2
+pretrainedmodels
+timm
+albumentations[imgaug]==1.2.1
+transformers

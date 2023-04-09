@@ -1,18 +1,32 @@
-import cv2
-import torch.utils.data as data
 from PIL import Image
-from sklearn.preprocessing import normalize
-from sklearn.metrics import pairwise_distances
-import pandas as pd
-import torch
-import os
 import numpy as np
-from torchvision import transforms
-from tqdm.auto import tqdm
-from src.config import product_batch_size
+import torchvision.transforms as transforms
+from sklearn.metrics import pairwise_distances
+from sklearn.preprocessing import normalize
+import gc
+import torch
+import cv2
+import pandas as pd
+import os
+from torch.utils.data import Dataset
+from tqdm import tqdm
+from config import params
 
-validation_dataset_path = "datasets/product_matching_evaluation"
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+validation_dataset_path = "development_test_data"
+batch_size = params['test_batch_size']
+
+transform = {'mcs_eval': transforms.Compose([transforms.Resize(params['image_size']),
+                                             transforms.transforms.ToTensor(),
+                                             transforms.Normalize(mean=(0.485, 0.456, 0.406),
+                                                                  std=(0.229, 0.224, 0.225)),
+                                             # transforms.Normalize(mean=(0.5, 0.5, 0.5),
+                                             #                      std=(0.5, 0.5, 0.5)),
+                                             ])}
+
+
+def report_gpu():
+    torch.cuda.empty_cache()
+    gc.collect()
 
 
 def read_image(image_file):
@@ -23,12 +37,18 @@ def read_image(image_file):
     return img
 
 
-class SubmissionDataset(data.Dataset):
-    def __init__(self, root, annotation_file, transforms=None, with_bbox=False):
+gallery_labels = pd.read_csv(os.path.join(validation_dataset_path, 'gallery.csv'))['product_id'].values
+query_labels = pd.read_csv(os.path.join(validation_dataset_path, 'queries.csv'))['product_id'].values
+
+
+class SubmissionDataset(Dataset):
+    def __init__(self, root, annotation_file, transforms=None, with_bbox=False,
+                 **transform_params):
         self.root = root
         self.imlist = pd.read_csv(annotation_file)
         self.transforms = transforms
         self.with_bbox = with_bbox
+        self.transform_params = transform_params
 
     def __getitem__(self, index):
         cv2.setNumThreads(6)
@@ -68,8 +88,6 @@ def compute_average_precision(ranked_targets: np.ndarray,
 
 def calculate_map(ranked_retrieval_results: np.ndarray) -> float:
     class_average_precisions = []
-    gallery_labels = pd.read_csv(os.path.join(validation_dataset_path, 'gallery.csv'))['product_id'].values
-    query_labels = pd.read_csv(os.path.join(validation_dataset_path, 'queries.csv'))['product_id'].values
 
     class_ids, class_counts = np.unique(gallery_labels, return_counts=True)
     class_id2quantity_dict = dict(zip(class_ids, class_counts))
@@ -85,48 +103,53 @@ def calculate_map(ranked_retrieval_results: np.ndarray) -> float:
 
 gallery_dataset = SubmissionDataset(root=validation_dataset_path,
                                     annotation_file=os.path.join(validation_dataset_path, 'gallery.csv'),
-                                    transforms=transforms.Compose([transforms.Resize((224, 224)),
-                                                                   transforms.ToTensor()])
+                                    transforms=transform['mcs_eval'],
                                     )
 
-gallery_loader = torch.utils.data.DataLoader(gallery_dataset, batch_size=product_batch_size,
-                                             shuffle=False, pin_memory=True)
+gallery_loader = torch.utils.data.DataLoader(gallery_dataset,
+                                             batch_size=batch_size,
+                                             shuffle=False,
+                                             # pin_memory=True,
+                                             # num_workers=4
+                                             )
 
 query_dataset = SubmissionDataset(root=validation_dataset_path,
                                   annotation_file=os.path.join(validation_dataset_path, 'queries.csv'),
-                                  transforms=transforms.Compose([transforms.Resize((224, 224)),
-                                                                 transforms.ToTensor()]),
-                                  with_bbox=True)
+                                  transforms=transform['mcs_eval'],
+                                  with_bbox=True,
+                                  )
 
-query_loader = torch.utils.data.DataLoader(query_dataset, batch_size=product_batch_size,
-                                           shuffle=False, pin_memory=True)
+query_loader = torch.utils.data.DataLoader(query_dataset,
+                                           batch_size=batch_size,
+                                           shuffle=False,
+                                           # pin_memory=True,
+                                           # num_workers=4
+                                           )
 
 
-def product_matching_validation(model, embedding_size=768):
+def product_matching_validation(model, embedding_size=1024):
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     gallery_embeddings = np.zeros((len(gallery_dataset), embedding_size))
     query_embeddings = np.zeros((len(query_dataset), embedding_size))
 
+    report_gpu()
     model.to(device)
+
     with torch.no_grad():
         for i, images in tqdm(enumerate(gallery_loader),
                               total=len(gallery_loader)):
             images = images.to(device)
-
-            outputs, _ = model(images)
-            outputs = outputs[:, 0, :]
-
+            outputs = model.extract_feat(images)
             outputs = outputs.data.cpu().numpy()
-            gallery_embeddings[i * product_batch_size:(i * product_batch_size + product_batch_size), :] = outputs
+            gallery_embeddings[i * batch_size:(i * batch_size + batch_size), :] = outputs
 
+        report_gpu()
         for i, images in tqdm(enumerate(query_loader),
                               total=len(query_loader)):
             images = images.to(device)
-
-            outputs, _ = model(images)
-            outputs = outputs[:, 0, :]
-
+            outputs = model.extract_feat(images)
             outputs = outputs.data.cpu().numpy()
-            query_embeddings[i * product_batch_size:(i * product_batch_size + product_batch_size), :] = outputs
+            query_embeddings[i * batch_size:(i * batch_size + batch_size), :] = outputs
 
     gallery_embeddings = normalize(gallery_embeddings)
     query_embeddings = normalize(query_embeddings)
