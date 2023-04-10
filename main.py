@@ -3,6 +3,7 @@ from tqdm import tqdm
 import torch.nn as nn
 import torch.optim as optim
 import neptune.new as neptune
+import numpy as np
 
 from src.dataset import build_transforms, make_train_loaders
 from src.model import LandmarkNet
@@ -19,6 +20,9 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 run['params'] = params
 run['params/img_size/height'] = params['image_size'][0]
 run['params/img_size/width'] = params['image_size'][1]
+
+np.random.seed(params['seed'])
+torch.manual_seed(params['seed'])
 
 train_transform, eval_transform = build_transforms(
     scale_limit=params['scale_limit'],

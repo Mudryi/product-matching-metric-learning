@@ -11,6 +11,7 @@ params = {
     'pooling': 'GeM',
     'class_topk': 9691,
     'use_fc': True,
+    'use_prelue': True,
     'loss': 'arcface',
     'margin': 0.3,
     's': 30,

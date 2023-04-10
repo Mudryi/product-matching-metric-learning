@@ -133,6 +133,7 @@ class LandmarkNet(nn.Module):
                  s=30.0,
                  margin=0.50,
                  ls_eps=0.0,
+                 use_prelu=False,
                  theta_zero=0.785):
         """
         :param n_classes:
@@ -161,6 +162,8 @@ class LandmarkNet(nn.Module):
             self.dropout = nn.Dropout(p=dropout)
             self.fc = nn.Linear(final_in_features, fc_dim)
             self.bn = nn.BatchNorm1d(fc_dim)
+            if use_prelu:
+                self.prelu = nn.PReLU(num_parameters=3)
             self._init_params()
             final_in_features = fc_dim
 
@@ -198,5 +201,7 @@ class LandmarkNet(nn.Module):
             x = self.dropout(x)
             x = self.fc(x)
             x = self.bn(x)
+            if self.use_prelu:
+                x = self.prelu(x)
 
         return x
