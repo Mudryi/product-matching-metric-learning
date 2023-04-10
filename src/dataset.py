@@ -6,6 +6,7 @@ from torch.utils.data.sampler import SequentialSampler, RandomSampler
 from torch.utils.data import DataLoader
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
 from albumentations import ImageOnlyTransform
 import albumentations.augmentations.geometric.functional as F
 from albumentations import (
@@ -110,8 +111,8 @@ def prepare_grouped_loader_from_df(df,
     loader = DataLoader(dataset=dataset,
                         # batch_sampler=sampler,
                         batch_size=batch_size,
-                        # pin_memory=True,
-                        # num_workers=num_workers
+                        pin_memory=True,
+                        num_workers=num_workers
                         )
     return loader
 
@@ -122,16 +123,15 @@ def make_train_loaders(params,
                        train_transform=None,
                        eval_transform=None,
                        scale='S',
-                       class_topk=1000,
                        limit_samples_per_class=-1,
                        test_size=0.1,
                        num_workers=4,
                        seed=77777
                        ):
     df = pd.read_csv("train.csv")
-    df = df.groupby('class').filter(
-        lambda x: len(x) > 16)  # 16 because we need at leat 16 samples of class in batch (4 classes, 64 batch size)
-
+    # df = df.groupby('class').filter(lambda x: len(x) > 16) # 16 because we need at leat 16 samples of class in batch (4 classes, 64 batch size)
+    # le = LabelEncoder()
+    # df["class"] = le.fit_transform(df["class"])
     df['path'] = df['name'].apply(lambda x: f'{data_root}/{x}')
 
     train_split, val_split = train_test_split(df, test_size=test_size, random_state=seed)
