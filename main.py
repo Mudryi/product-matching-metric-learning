@@ -35,7 +35,6 @@ data_loaders = make_train_loaders(params=params,
                                   eval_transform=eval_transform,
                                   scale='S2',
                                   test_size=params['test_size'],
-                                  class_topk=params['class_topk'],
                                   num_workers=1
                                   )
 

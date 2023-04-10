@@ -12,6 +12,7 @@ project:
 containers:
   - projectDir: /workspace/project
     file: docker/Dockerfile.spotty
+    runtimeParameters: [ '--shm-size', '8G' ]
     volumeMounts:
       - name: workspace
         mountPath: /workspace

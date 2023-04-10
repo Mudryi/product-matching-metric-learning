@@ -109,8 +109,8 @@ gallery_dataset = SubmissionDataset(root=validation_dataset_path,
 gallery_loader = torch.utils.data.DataLoader(gallery_dataset,
                                              batch_size=batch_size,
                                              shuffle=False,
-                                             # pin_memory=True,
-                                             # num_workers=4
+                                             pin_memory=True,
+                                             num_workers=4
                                              )
 
 query_dataset = SubmissionDataset(root=validation_dataset_path,
@@ -122,8 +122,8 @@ query_dataset = SubmissionDataset(root=validation_dataset_path,
 query_loader = torch.utils.data.DataLoader(query_dataset,
                                            batch_size=batch_size,
                                            shuffle=False,
-                                           # pin_memory=True,
-                                           # num_workers=4
+                                           pin_memory=True,
+                                           num_workers=4
                                            )
 
 
