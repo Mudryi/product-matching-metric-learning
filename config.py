@@ -11,7 +11,7 @@ params = {
     'pooling': 'GeM',
     'class_topk': 9691,
     'use_fc': True,
-    'use_prelue': True,
+    'use_prelue': False,
     'loss': 'arcface',
     'margin': 0.3,
     's': 30,
@@ -21,8 +21,8 @@ params = {
     'shear_limit': 0,
     'brightness_limit': 0.0,
     'contrast_limit': 0.0,
-    'augmentation': 'soft',
-    'train_data': 'gld_v1',
+    'augmentation': "Rotate, Flip, RandomCrop, ColorJitter",
+    'train_data': 'all data',
     'test_size': 0.01,
     'image_size': (288, 288)
 }

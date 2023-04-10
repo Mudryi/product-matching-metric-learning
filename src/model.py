@@ -158,12 +158,13 @@ class LandmarkNet(nn.Module):
         self.pooling = GeM(**args_pooling)
 
         self.use_fc = use_fc
+        self.use_prelu = use_prelu
         if use_fc:
             self.dropout = nn.Dropout(p=dropout)
             self.fc = nn.Linear(final_in_features, fc_dim)
             self.bn = nn.BatchNorm1d(fc_dim)
             if use_prelu:
-                self.prelu = nn.PReLU(num_parameters=3)
+                self.prelu = nn.PReLU(num_parameters=1)
             self._init_params()
             final_in_features = fc_dim
 

@@ -17,6 +17,9 @@ from albumentations import (
     RandomBrightnessContrast,
     MotionBlur,
     CLAHE,
+    RandomCrop,
+    Rotate,
+    Flip,
     ToGray,
     ColorJitter,
 )
@@ -160,14 +163,17 @@ def build_transforms(mean=(0.485, 0.456, 0.406),
     norm = Normalize(mean=mean, std=std, max_pixel_value=divide_by)
 
     train_transform = Compose([
-        Affine(rotate=(-rotate_limit, rotate_limit), shear=(-shear_limit, shear_limit), mode='constant'),
-        RandomBrightnessContrast(brightness_limit=brightness_limit, contrast_limit=contrast_limit),
-        MotionBlur(p=blur_p),
-        CLAHE(p=clahe_p),
-        # ColorJitter(),
+        # Affine(rotate=(-rotate_limit, rotate_limit), shear=(-shear_limit, shear_limit), mode='constant'),
+        # RandomBrightnessContrast(brightness_limit=brightness_limit, contrast_limit=contrast_limit),
+        # MotionBlur(p=blur_p),
+        # CLAHE(p=clahe_p),
+        Rotate(limit=90),
+        Flip(),
+        RandomCrop(height=int(params['image_size'][0]/2), width=int(params['image_size'][1]/2)),
+        ColorJitter(),
         # ToGray(),
-        # Resize(params['image_size'][0], params['image_size'][1]),
-        RandomCropThenScaleToOriginalSize(limit=scale_limit, p=1.0),
+        Resize(params['image_size'][0], params['image_size'][1]),
+        # RandomCropThenScaleToOriginalSize(limit=scale_limit, p=1.0),
         norm,
         ])
     eval_transform = Compose([Resize(params['image_size'][0], params['image_size'][1]), norm])

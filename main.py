@@ -50,6 +50,7 @@ model = LandmarkNet(n_classes=params['class_topk'],
                     margin=params['margin'],
                     theta_zero=params['theta_zero'],
                     use_fc=params['use_fc'],
+                    use_prelu=params['use_prelu'],
                     fc_dim=params['fc_dim']
                     ).to(device)
 
