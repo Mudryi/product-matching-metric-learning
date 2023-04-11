@@ -88,8 +88,8 @@ for epoch in range(start_epoch, params['epochs']):
 
         if i % 100 == 99:
             print(f'{epoch + i / len(data_loaders["train"]):.2f}epoch | acc: {prec1.avg}')
-            run["train/acc"].append(prec1.avg)
-            run["train/loss"].append(losses.avg)
+            run["train/acc"].append(float(prec1.avg))
+            run["train/loss"].append(float(losses.avg))
 
     train_loss = losses.avg
     train_acc = prec1.avg
