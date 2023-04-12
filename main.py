@@ -88,8 +88,8 @@ for epoch in range(start_epoch, params['epochs']):
 
         if i % 100 == 99:
             print(f'{epoch + i / len(data_loaders["train"]):.2f}epoch | acc: {prec1.avg}')
-            run["train/acc"].append(float(prec1.avg))
-            run["train/loss"].append(float(losses.avg))
+            run["train/acc"].append(round(prec1.avg, 10))
+            run["train/loss"].append(round(losses.avg, 10))
 
     train_loss = losses.avg
     train_acc = prec1.avg
@@ -97,12 +97,12 @@ for epoch in range(start_epoch, params['epochs']):
     print('Loss', {'train': train_loss}, epoch)
     print('Acc', {'train': train_acc}, epoch)
     print('LR', optimizer.param_groups[0]['lr'], epoch)
-    run['train/lr'].append(optimizer.param_groups[0]['lr'])
+    run['train/lr'].append(round(optimizer.param_groups[0]['lr'], 14))
 
     target_mape = product_matching_validation(model, embedding_size=params['fc_dim'])
     print('Map MSC = ', target_mape)
 
-    run['eval/Map'].append(target_mape)
+    run['eval/Map'].append(round(target_mape, 10))
 
     eval_loss = []
     for i, (_, x, y) in tqdm(enumerate(data_loaders['val']), total=len(data_loaders['val']), miniters=None, ncols=55):
@@ -115,7 +115,7 @@ for epoch in range(start_epoch, params['epochs']):
             loss = criterion(outputs, y)
         eval_loss.append(loss.item())
 
-    run['eval/loss'].append(np.mean(eval_loss))
+    run['eval/loss'].append(round(np.mean(eval_loss), 10))
 
     if best_mape < target_mape:
         best_mape = target_mape
