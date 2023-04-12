@@ -149,6 +149,7 @@ class LandmarkNet(nn.Module):
         # self.backbone = getattr(pretrainedmodels, model_name)(num_classes=1000)
         # final_in_features = self.backbone.last_linear.in_features #for resnet
         final_in_features = self.backbone.head.fc.in_features  # for nfnet
+        # final_in_features = self.backbone.classifier.in_features  # for nfnet
         # final_in_features = self.backbone.fc.in_features #seresnet
         # final_in_features = 768 # for beit
 

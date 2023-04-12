@@ -33,6 +33,7 @@ def read_image(image_file):
         raise ValueError('Failed to read {}'.format(image_file))
     return img
 
+
 class LandmarkDataset(Dataset):
     # (width, height)
     size_template = {
@@ -137,17 +138,23 @@ def make_train_loaders(params,
     # df["class"] = le.fit_transform(df["class"])
     df['path'] = df['name'].apply(lambda x: f'{data_root}/{x}')
 
-    train_split, val_split = train_test_split(df, test_size=test_size, random_state=seed)
+    df_eval = pd.read_csv("test.csv")
+    df_eval['path'] = df_eval['name'].apply(lambda x: f'test/{x}')
+
+    df = pd.concat([df, df_eval[df_eval.Usage == 'Public']], axis=0)
+
+    # train_split, val_split = train_test_split(df, test_size=test_size, random_state=seed)
 
     data_loaders = dict()
     data_loaders['train'] = prepare_grouped_loader_from_df(
-        train_split, train_transform, params['batch_size'],
+        df, train_transform, params['batch_size'],
         scale=scale, is_train=True, num_workers=num_workers)
     data_loaders['val'] = prepare_grouped_loader_from_df(
-        val_split, eval_transform, params['test_batch_size'],
+        df_eval[df_eval.Usage == 'Private'], eval_transform, params['test_batch_size'],
         scale=scale, is_train=False, num_workers=num_workers)
 
     return data_loaders
+
 
 def build_transforms(mean=(0.485, 0.456, 0.406),
                      std=(0.229, 0.224, 0.225),
@@ -175,7 +182,7 @@ def build_transforms(mean=(0.485, 0.456, 0.406),
         # ToGray(),
         RandomCropThenScaleToOriginalSize(limit=scale_limit, p=1.0),
         norm,
-        ])
+    ])
     eval_transform = Compose([Resize(params['image_size'][0], params['image_size'][1]), norm])
 
     return train_transform, eval_transform

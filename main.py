@@ -104,6 +104,19 @@ for epoch in range(start_epoch, params['epochs']):
 
     run['eval/Map'].append(target_mape)
 
+    eval_loss = []
+    for i, (_, x, y) in tqdm(enumerate(data_loaders['val']), total=len(data_loaders['val']), miniters=None, ncols=55):
+        model = model.eval()
+
+        with torch.no_grad():
+            x = x.to(device)
+            y = y.to(device)
+            outputs = model(x, y)
+            loss = criterion(outputs, y)
+        eval_loss.append(loss.item())
+
+    run['eval/loss'].append(np.mean(eval_loss))
+
     if best_mape < target_mape:
         best_mape = target_mape
         save_checkpoint(path="best_model.pth",

@@ -24,5 +24,5 @@ params = {
     'augmentation': "Affine, RandomBrightnessContrast, MotionBlur, CLAHE, RandomCropThenScaleToOriginalSize",
     'train_data': 'all data',
     'test_size': 0.01,
-    'image_size': (320, 320)
+    'image_size': (288, 288)
 }
