@@ -115,6 +115,7 @@ def prepare_grouped_loader_from_df(df,
     loader = DataLoader(dataset=dataset,
                         # batch_sampler=sampler,
                         batch_size=batch_size,
+                        shuffle=True,
                         pin_memory=True,
                         num_workers=num_workers
                         )
@@ -141,13 +142,12 @@ def make_train_loaders(params,
     df_eval = pd.read_csv("test.csv")
     df_eval['path'] = df_eval['name'].apply(lambda x: f'test/{x}')
 
-    df = pd.concat([df, df_eval[df_eval.Usage == 'Public']], axis=0)
-
-    # train_split, val_split = train_test_split(df, test_size=test_size, random_state=seed)
+    # df = pd.concat([df, df_eval[df_eval.Usage == 'Public']], axis=0)
+    train_split, val_split = train_test_split(df, test_size=test_size, random_state=seed)
 
     data_loaders = dict()
     data_loaders['train'] = prepare_grouped_loader_from_df(
-        df, train_transform, params['batch_size'],
+        train_split, train_transform, params['batch_size'],
         scale=scale, is_train=True, num_workers=num_workers)
     data_loaders['val'] = prepare_grouped_loader_from_df(
         df_eval[df_eval.Usage == 'Private'], eval_transform, params['test_batch_size'],
