@@ -142,7 +142,7 @@ def make_train_loaders(params,
     df_eval = pd.read_csv("test.csv")
     df_eval['path'] = df_eval['name'].apply(lambda x: f'test/{x}')
 
-    # df = pd.concat([df, df_eval[df_eval.Usage == 'Public']], axis=0)
+    df = pd.concat([df, df_eval[df_eval.Usage == 'Public']], axis=0)
     train_split, val_split = train_test_split(df, test_size=test_size, random_state=seed)
 
     data_loaders = dict()

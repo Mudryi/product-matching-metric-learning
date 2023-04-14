@@ -118,6 +118,17 @@ class GeM(nn.Module):
             self.eps) + ')'
 
 
+class Multisample_Dropout(nn.Module):
+    def __init__(self, dropout_rate=0.1):
+        super(Multisample_Dropout, self).__init__()
+        self.dropout = nn.Dropout(dropout_rate)
+        self.dropouts = nn.ModuleList([nn.Dropout((i + 1) * .1) for i in range(5)])
+
+    def forward(self, x, module):
+        x = self.dropout(x)
+        return torch.mean(torch.stack([module(dropout(x)) for dropout in self.dropouts], dim=0), dim=0)
+
+
 class LandmarkNet(nn.Module):
     DIVIDABLE_BY = 32
 
@@ -161,8 +172,9 @@ class LandmarkNet(nn.Module):
         self.use_fc = use_fc
         self.use_prelu = use_prelu
         if use_fc:
-            self.dropout = nn.Dropout(p=dropout)
-            self.fc = nn.Linear(final_in_features, fc_dim)
+            # self.dropout = nn.Dropout(p=dropout)
+            self.dropout = Multisample_Dropout()
+            self.fc = nn.Linear(final_in_features, fc_dim, bias=False)
             self.bn = nn.BatchNorm1d(fc_dim)
             if use_prelu:
                 self.prelu = nn.PReLU(num_parameters=1)
@@ -200,8 +212,8 @@ class LandmarkNet(nn.Module):
         x = self.pooling(x).view(batch_size, -1)
 
         if self.use_fc:
-            x = self.dropout(x)
             x = self.fc(x)
+            x = self.dropout(x)
             x = self.bn(x)
             if self.use_prelu:
                 x = self.prelu(x)

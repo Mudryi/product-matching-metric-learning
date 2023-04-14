@@ -24,5 +24,9 @@ params = {
     'augmentation': "Affine, RandomBrightnessContrast, MotionBlur, CLAHE, RandomCropThenScaleToOriginalSize",
     'train_data': 'all data',
     'test_size': 0.01,
-    'image_size': (288, 288)
+    'image_size': (288, 288),
+    'dropout': 'Multisample_Dropout',
+    'dropout_rate': 0.1,
+    'linear_bias': False,
+    'FC_order': 'embedding->dropout'
 }
