@@ -194,7 +194,7 @@ class LandmarkNet(nn.Module):
 
     def _init_params(self):
         nn.init.xavier_normal_(self.fc.weight)
-        nn.init.constant_(self.fc.bias, 0)
+        # nn.init.constant_(self.fc.bias, 0)
         nn.init.constant_(self.bn.weight, 1)
         nn.init.constant_(self.bn.bias, 0)
 
@@ -212,8 +212,8 @@ class LandmarkNet(nn.Module):
         x = self.pooling(x).view(batch_size, -1)
 
         if self.use_fc:
-            x = self.fc(x)
-            x = self.dropout(x)
+            # x = self.fc(x)
+            x = self.dropout(x, self.fc)
             x = self.bn(x)
             if self.use_prelu:
                 x = self.prelu(x)
