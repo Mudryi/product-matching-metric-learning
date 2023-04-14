@@ -56,9 +56,13 @@ model = LandmarkNet(n_classes=params['class_topk'],
 
 optimizer = get_optim(params, model)
 criterion = nn.CrossEntropyLoss()
+
 scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer,
                                                  T_max=params['epochs'] * len(data_loaders['train']),
                                                  eta_min=params['scheduler_eta_min'])
+
+if params['use_GradScaler']:
+    scaler = torch.cuda.amp.GradScaler(enabled=True)
 
 start_epoch = 0
 best_mape = 0
@@ -77,14 +81,24 @@ for epoch in range(start_epoch, params['epochs']):
 
         outputs = model(x, y)
         loss = criterion(outputs, y)
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-        scheduler.step()
 
         acc = accuracy(outputs, y)
         losses.update(loss.item(), x.size(0))
         prec1.update(acc, x.size(0))
+
+        if params['use_GradScaler']:
+            loss = loss / params['acc_steps']
+            scaler.scale(loss).backward()
+            if i % params['acc_steps'] == 0 or i == len(data_loaders['train']):
+                scaler.step(optimizer)
+                scaler.update()
+                optimizer.zero_grad()
+                scheduler.step()
+        else:
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            scheduler.step()
 
         if i % 100 == 99:
             print(f'{epoch + i / len(data_loaders["train"]):.2f}epoch | acc: {prec1.avg}')
